@@ -116,8 +116,8 @@ Param (
     [string]$isoURL         = "http://10.239.16.2/ISO/ubuntu-16.04.3-server-amd64.iso",
     
     [string]$OVApplianceIP          = "10.239.121.121", 
-    [string]$OVAdminName            = "", 
-    [string]$OVAdminPassword        = "",
+    [string]$OVAdminName            = "administrator", 
+    [string]$OVAdminPassword        = "Test2017!",
     [string]$OVAuthDomain           = "local",
 
     [string]$Server                 = "",
@@ -170,7 +170,6 @@ Param (
                             }
                 'On'
                             {
-                                " I am here with $($sysData.PowerState)" 
                                 if ($sysData.PowerState -eq 'Off') 
                                 {    
                                     $dataToPost
@@ -408,7 +407,11 @@ Param (
                         try 
                         {
                             write-host -foreground CYAN "Create profile for $Server using template $ServerProfileTemplate.... " 
-                            New-HPOVServerProfile -Name "Profile of $Server" -ServerProfileTemplate $ThisTemplate -Server $ThisServer -ErrorAction stop -AssignmentType Server | Wait-HPOVTaskComplete
+                            if ($ThisServer.powerState -eq 'On')
+                                { $ThisServer | Stop-HPOVServer -Force -Confirm:$False | Wait-HPOVTaskComplete }
+
+                            New-HPOVServerProfile -Name "Profile of $Server" -ServerProfileTemplate $ThisTemplate -Server $ThisServer  -AssignmentType Server -ErrorAction stop | Wait-HPOVTaskComplete
+                            $iLOSession = $ThisServer | Get-HPOVIloSso -IloRestSession 
                         }
                         catch
                         {
@@ -416,7 +419,7 @@ Param (
                             $iLOSession = $NULL
                         }
 
-                        $iLOSession = $ThisServer | Get-HPOVIloSso -IloRestSession 
+                        
 
                     }
                     else 
@@ -449,10 +452,14 @@ Param (
         write-host -foreground  CYAN " iLO - Configure URL to point to $isoURL ......"
         Set-VirtualMedia -isoURL $isoURL -ILOsession $iLOSession
     
-        write-host -foreground  CYAN " iLO - Force Restart server ......"
-        Set-Power -ActionValue ForceRestart  -ILOsession $iLOSession
+        write-host -foreground  CYAN " iLO - Power On server ......"
+        Set-Power -ActionValue On  -ILOsession $iLOSession
+
     }
-    
+    if ($ConnectedSessions)
+    {
+        Disconnect-HPOVMgmt
+    }    
     
     
         
