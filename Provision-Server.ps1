@@ -117,7 +117,7 @@ Param (
     
     [string]$OVApplianceIP          = "10.239.121.121", 
     [string]$OVAdminName            = "administrator", 
-    [string]$OVAdminPassword        = "Test2017!",
+    [string]$OVAdminPassword        = "",
     [string]$OVAuthDomain           = "local",
 
     [string]$Server                 = "",
